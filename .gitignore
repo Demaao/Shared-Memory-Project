@@ -1,0 +1,10 @@
+# Vivado build artifacts
+*.log
+*.jou
+proj/.Xil/
+proj/*.runs/
+proj/*.cache/
+proj/.hw/
+*.wdb
+*.pb
+*.dcp
