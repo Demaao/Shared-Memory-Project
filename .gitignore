@@ -8,3 +8,6 @@ proj/.hw/
 *.wdb
 *.pb
 *.dcp
+vivado/**/runs/
+vivado/**/.Xil/
+vivado/**/cache/
