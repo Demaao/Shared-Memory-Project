@@ -49,17 +49,17 @@ module tb_dual_port_ram;
     @(posedge clk); #1;
     $display("T1: rdata_b = %h (expected DEADBEEF)", rdata_b);
     if (rdata_b !== 32'hDEADBEEF) begin
-      $display("TEST 1 FAIL");
+      $display("Test 1 fail");
       $fatal;
     end
     
     // Test 2: WRITE-FIRST - Port A writes while Port B reads same address
     addr_a  = 10'h040; wdata_a = 32'hA5A5_0001; we_a = 1'b1;
     addr_b  = 10'h040; we_b    = 1'b0;
-    @(posedge clk); #1;  // forwarding צריך להראות את הערך החדש מיד אחרי הקצה
+    @(posedge clk); #1;  
     $display("T2: rdata_b = %h (expected A5A50001)", rdata_b);
     if (rdata_b !== 32'hA5A5_0001) begin
-      $display("TEST 2 FAIL (WRITE-FIRST expected on B), got %h", rdata_b);
+      $display("Test 2 fail,got %h", rdata_b);
       $fatal;
     end
     we_a = 1'b0;
@@ -73,7 +73,7 @@ module tb_dual_port_ram;
     @(posedge clk); #1;
     $display("T3(collision): rdata_a=%h rdata_b=%h (expected both AAAA5555)", rdata_a, rdata_b);
     if (rdata_a !== 32'hAAAA_5555 || rdata_b !== 32'hAAAA_5555) begin
-      $display("TEST 3 FAIL (collision forwarding)");
+      $display("Test 3 fail (collision forwarding)");
       $fatal;
     end
 
@@ -84,11 +84,11 @@ module tb_dual_port_ram;
     @(posedge clk); #1;  // registered read stable
     $display("T3(readback): rdata_b=%h (expected AAAA5555)", rdata_b);
     if (rdata_b !== 32'hAAAA_5555) begin
-      $display("TEST 3 FAIL (A should win on same-address write/write), got %h", rdata_b);
+      $display("Test 3 fail (A should win on same-address), got %h", rdata_b);
       $fatal;
     end
 
-    $display("ALL TESTS PASS");
+    $display("All tests pass");
     #10 $finish;
   end
 
