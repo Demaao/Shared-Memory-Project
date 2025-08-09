@@ -1,22 +1,30 @@
-# Vivado build artifacts
+# Vivado build artifacts (files)
 *.log
 *.jou
+*.rpt
+*.str
 *.wdb
+*.wdf
 *.pb
 *.dcp
+*.ltx
+*.html
+*.xml
+*.xpr
+*.lpr
+
+# Vivado generated directories
 *.cache/
 *.hw/
 *.runs/
-.Xil/
-*.ip_user_files/
 *.sim/
+.Xil/
+ip_user_files/
 
+#  ignore under the vivado project tree
 vivado/**/.Xil/
 vivado/**/.cache/
 vivado/**/.runs/
 vivado/**/.hw/
 vivado/**/.sim/
 vivado/**/ip_user_files/
-
-*.xpr
-*.lpr
