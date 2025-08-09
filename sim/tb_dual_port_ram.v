@@ -1,58 +1,95 @@
 `timescale 1ns/1ps
 
-//Test for dual_port_ram
-
+// Testbench for dual_port_ram
 module tb_dual_port_ram;
 
-    //100 MHz clock, period = 10 ns 
-    reg clk = 0;
-    always #5 clk = ~clk;
+  // 100 MHz clock, period = 10 ns
+  reg clk = 0;
+  always #5 clk = ~clk;
 
-    //Signals for the two ports 
-    reg        we_a = 0,  we_b = 0;            // write-enable for each port
-    reg [9:0]  addr_a = 0, addr_b = 0;         // LOCAL_ADDR_WIDTH = 10
-    reg [31:0] wdata_a = 0,  wdata_b = 0;      // data to write
-    wire [31:0] rdata_a,   rdata_b;            // data read
+  // Signals for the two ports
+  reg         we_a = 0,  we_b = 0;           // write enable for each port
+  reg  [9:0]  addr_a = 0, addr_b = 0;        // LOCAL_ADDR_WIDTH = 10
+  reg  [31:0] wdata_a = 0,  wdata_b = 0;     // data to write
+  wire [31:0] rdata_a,   rdata_b;            // data read
 
-    // Test :
-    dual_port_ram dut (
-        .clk    (clk),
+ 
+  dual_port_ram #(
+    .LOCAL_ADDR_WIDTH(10),
+    .DATA_WIDTH(32)
+  ) dut (
+    .clk    (clk),
 
-        // Port A (forward path)
-        .we_a   (we_a),
-        .addr_a (addr_a),
-        .wdata_a(wdata_a),
-        .rdata_a(rdata_a),
+    // Port A (forward path)
+    .we_a   (we_a),
+    .addr_a (addr_a),
+    .wdata_a(wdata_a),
+    .rdata_a(rdata_a),
 
-        // Port B (backward path)
-        .we_b   (we_b),
-        .addr_b (addr_b),
-        .wdata_b(wdata_b),
-        .rdata_b(rdata_b)
-    );
+    // Port B (backward path)
+    .we_b   (we_b),
+    .addr_b (addr_b),
+    .wdata_b(wdata_b),
+    .rdata_b(rdata_b)
+  );
 
-    
-    initial begin
-        // Step 1: write through Port A
-        addr_a  = 10'h03F;
-        wdata_a = 32'hDEADBEEF;
-        we_a    = 1'b1;
-        #10;                 // wait one clock cycle
-        we_a    = 1'b0;      // stop writing
+  initial begin
+    // to avoid 'X' on first samples 
+    repeat (2) @(posedge clk);
 
-        // Step 2: read the same address through Port B
-        addr_b  = 10'h03F;   // we_b stays 0 (read)
-        #10;                 // wait one cycle (rdata_b should update)
-        $display("rdata_b = %h (expected DEADBEEF)", rdata_b);
+    // Test 1: write using A, read using B
+    addr_b = 10'h03F;  we_b = 1'b0;
+    @(posedge clk);
 
-        // Pass/fail check
-        if (rdata_b == 32'hDEADBEEF)
-            $display("TEST PASS");
-        else begin
-            $display("TEST FAIL");
-            $fatal;
-        end
+    addr_a  = 10'h03F; wdata_a = 32'hDEADBEEF; we_a = 1'b1;
+    @(posedge clk);
+    we_a    = 1'b0;
 
-        #10 $finish;
+   
+    @(posedge clk); #1;
+    $display("T1: rdata_b = %h (expected DEADBEEF)", rdata_b);
+    if (rdata_b !== 32'hDEADBEEF) begin
+      $display("TEST 1 FAIL");
+      $fatal;
     end
+    
+    // Test 2: WRITE-FIRST - Port A writes while Port B reads same address
+    addr_a  = 10'h040; wdata_a = 32'hA5A5_0001; we_a = 1'b1;
+    addr_b  = 10'h040; we_b    = 1'b0;
+    @(posedge clk); #1;  // forwarding צריך להראות את הערך החדש מיד אחרי הקצה
+    $display("T2: rdata_b = %h (expected A5A50001)", rdata_b);
+    if (rdata_b !== 32'hA5A5_0001) begin
+      $display("TEST 2 FAIL (WRITE-FIRST expected on B), got %h", rdata_b);
+      $fatal;
+    end
+    we_a = 1'b0;
+
+   
+    // Test 3: two writes to the same address (Port A wins)
+    addr_a  = 10'h055; wdata_a = 32'hAAAA_5555; we_a = 1'b1;
+    addr_b  = 10'h055; wdata_b = 32'hBBBB_5555; we_b = 1'b1;
+
+    // Collision cycle
+    @(posedge clk); #1;
+    $display("T3(collision): rdata_a=%h rdata_b=%h (expected both AAAA5555)", rdata_a, rdata_b);
+    if (rdata_a !== 32'hAAAA_5555 || rdata_b !== 32'hAAAA_5555) begin
+      $display("TEST 3 FAIL (collision forwarding)");
+      $fatal;
+    end
+
+    // Disable writes, read back using B to confirm memory holds A's data
+    we_a = 1'b0; we_b = 1'b0;
+    addr_b = 10'h055; we_b = 1'b0;
+    @(posedge clk);      // capture addr
+    @(posedge clk); #1;  // registered read stable
+    $display("T3(readback): rdata_b=%h (expected AAAA5555)", rdata_b);
+    if (rdata_b !== 32'hAAAA_5555) begin
+      $display("TEST 3 FAIL (A should win on same-address write/write), got %h", rdata_b);
+      $fatal;
+    end
+
+    $display("ALL TESTS PASS");
+    #10 $finish;
+  end
+
 endmodule
