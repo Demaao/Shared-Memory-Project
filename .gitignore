@@ -1,15 +1,15 @@
 # Vivado build artifacts
-*.jou
 *.log
-*.rpt
-*.str
+*.jou
 *.wdb
-*.wdf
-*.dcp
-*.ltx
 *.pb
-*.html
-*.xml
+*.dcp
+*.cache/
+*.hw/
+*.runs/
+.Xil/
+*.ip_user_files/
+*.sim/
 
 vivado/**/.Xil/
 vivado/**/.cache/
