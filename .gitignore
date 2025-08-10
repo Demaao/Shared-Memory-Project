@@ -26,5 +26,4 @@ vivado/**/.Xil/
 vivado/**/.cache/
 vivado/**/.runs/
 vivado/**/.hw/
-vivado/**/.sim/
 vivado/**/ip_user_files/
