@@ -8,7 +8,7 @@
 `define DATA_WIDTH       32
 
 // Set n = 2^K  (example: K=3 so we have 8 cores/modules)
-`define K_LOG2           10
+`define K_LOG2           2
 
 // Number of cores and memory modules (derived from K_LOG2)
 `define N_CORES          (1 << `K_LOG2)
