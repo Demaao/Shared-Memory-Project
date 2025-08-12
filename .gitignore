@@ -20,6 +20,7 @@
 *.sim/
 .Xil/
 ip_user_files/
+*.srcs/
 
 #  ignore under the vivado project tree
 vivado/**/.Xil/
